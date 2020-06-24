@@ -1,0 +1,16 @@
+{
+"companyName": "William.ThompsonJ",
+"productName": "Color Palette Swapper",
+"productVersion": "0.1",
+"dataUrl": "Color-Palette-Swapper.data.unityweb",
+"wasmCodeUrl": "Color-Palette-Swapper.wasm.code.unityweb",
+"wasmFrameworkUrl": "Color-Palette-Swapper.wasm.framework.unityweb",
+"graphicsAPI": ["WebGL 2.0","WebGL 1.0"],
+"webglContextAttributes": {"preserveDrawingBuffer": false},
+"splashScreenStyle": "Dark",
+"backgroundColor": "#808080",
+"cacheControl": {"default": "must-revalidate"},
+"developmentBuild": false,
+"multithreading": false,
+"unityVersion": "2019.4.1f1"
+}
