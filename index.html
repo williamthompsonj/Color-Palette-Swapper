@@ -1,33 +1,37 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Color Palette Swapper</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-    <script src="TemplateData/UnityProgress.js"></script>
-    <script src="Build/UnityLoader.js"></script>
-    <script>
-      var unityInstance = UnityLoader.instantiate("unityContainer", "Build/Color-Palette-Swapper.json", {onProgress: UnityProgress});
-    </script>
-	<meta http-equiv="Cache-Control" content="no-cache" />
-	<meta http-equiv="Expires" content="0" />
-	<meta http-equiv="Pragma" content="no-cache" />
-  </head>
-  <body>
-    <div class="webgl-content">
-      <div id="unityContainer" style="width: 1024; height: 576px"></div>
-      <div class="footer">
-        <div class="webgl-logo"></div>
-        <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
-        <div class="title">Color Palette Swapper</div>
-      </div>
-    </div>
-	<br>
-	<div><a href="https://opengameart.org">OpenGameArt</a> has all kinds of artwork, music, or other game creation materials.
-	</div>
-	<br>
-	<div><a href="https://lospec.com/palette-list">lospec</a> has a great selection of color palettes.</div>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Cache-Control" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="description" content="Color Palette Swap Change Tool">
+<meta name="keywords" content="Color, Palette, Swap, Change, Tool, PNG, Transparent, Free, Online">
+<meta name="author" content="William.ThompsonJ">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Palette Swap Tool | William.ThompsonJ</title>
+<link rel="shortcut icon" href="TemplateData/favicon.ico">
+<link rel="stylesheet" href="TemplateData/style.css">
+<script src="TemplateData/UnityProgress.js"></script>
+<script src="Build/UnityLoader.js"></script>
+<script>
+var unityInstance = UnityLoader.instantiate("unityContainer", "Build/Color-Palette-Swapper.json", {onProgress: UnityProgress});
+</script>
+</head>
+<body>
+<div><a href="https://opengameart.org">OpenGameArt</a> has all kinds of artwork, music, or other game creation materials.
+</div>
+<br>
+<div><a href="https://lospec.com/palette-list">lospec</a> has a great selection of color palettes.</div>
+<br>
+<div class="webgl-content">
+<div id="unityContainer" style="width: 1024; height: 576px"></div>
+<div class="footer">
+<div class="webgl-logo"></div>
+<div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
+<div class="title">Color Palette Swap Tool</div>
+</div>
+</div>
+</body>
 </html>
