@@ -7,7 +7,7 @@
 "wasmFrameworkUrl": "Color-Palette-Swapper.wasm.framework.unityweb",
 "graphicsAPI": ["WebGL 2.0","WebGL 1.0"],
 "webglContextAttributes": {"preserveDrawingBuffer": false},
-"splashScreenStyle": "Dark",
+"splashScreenStyle": "Light",
 "backgroundColor": "#808080",
 "cacheControl": {"default": "must-revalidate"},
 "developmentBuild": false,
