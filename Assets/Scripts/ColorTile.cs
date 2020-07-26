@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class ColorTile : MonoBehaviour
 {
-
     private GameObject obj_ref;
     private Image image_ref, overlay;
     private bool is_input_palette;
@@ -21,7 +20,7 @@ public class ColorTile : MonoBehaviour
         if (is_input_palette)
         {
             // turn off output_ref
-            if(output_ref != null)
+            if (output_ref != null)
             {
                 output_ref.Highlight(false);
                 output_ref = null;
@@ -100,8 +99,7 @@ public class ColorTile : MonoBehaviour
 
     public ColorPlus GetColorPlus()
     {
-        ColorPlus cp = new ColorPlus(color);
-        cp.match = match;
+        ColorPlus cp = this;
         return cp;
     }
 
@@ -144,5 +142,14 @@ public class ColorTile : MonoBehaviour
                 break;
             }
         }
+    }
+
+    // convert implicitly between Color32 and ColorPlus
+    public static implicit operator Color32(ColorTile c) => c.color;
+    public static implicit operator ColorPlus(ColorTile c)
+    {
+        ColorPlus v = new ColorPlus(c.color);
+        v.match = c.match;
+        return v;
     }
 }

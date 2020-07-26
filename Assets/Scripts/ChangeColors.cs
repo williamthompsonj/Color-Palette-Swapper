@@ -107,6 +107,21 @@ public class ChangeColors : MonoBehaviour, IBeginDragHandler, IDragHandler
 
     private void PickSave()
     {
+        // clear palettes
+        ImageUtilities.input_palette.Clear();
+        ImageUtilities.output_palette.Clear();
+
+        // load current color palette state
+        foreach (ColorTile c in input_tiles)
+        {
+            ImageUtilities.input_palette.Add(c);
+        }
+
+        foreach (ColorTile c in output_tiles)
+        {
+            ImageUtilities.output_palette.Add(c);
+        }
+
         // hide settings menu and restore buttons so user can work
         PickClose();
     }
@@ -428,28 +443,17 @@ public class ChangeColors : MonoBehaviour, IBeginDragHandler, IDragHandler
         ImageUtilities.input_palette.Clear();
         ImageUtilities.output_palette.Clear();
 
-        ColorPlus[] temp_plus = new ColorPlus[input_colors.Count];
-
         // cycle through input color tiles and apply to input palette
         for (int i = 0; i != input_tiles.Count; i++)
         {
-            temp_plus[i] = input_tiles[i].GetColorPlus();
+            ImageUtilities.input_palette.Add(input_tiles[i]);
         }
-
-        // load input palette with new matches
-        ImageUtilities.input_palette.AddRange(temp_plus);
-
-        // clear working list so ready to use again
-        temp_plus = new ColorPlus[output_colors.Count];
 
         // cycle through new output palette
         for (int i = 0; i != output_tiles.Count; i++)
         {
-            temp_plus[i] = output_tiles[i].GetColorPlus();
+            ImageUtilities.output_palette.Add(output_tiles[i]);
         }
-
-        // load output palette with old and (possibly) new colors
-        ImageUtilities.output_palette.AddRange(temp_plus);
 
         // reload the preview with new color matches
         ImageUtilities.SetOutputImage();
@@ -464,11 +468,10 @@ public class ChangeColors : MonoBehaviour, IBeginDragHandler, IDragHandler
         ColorTile ct;
 
         // cycle through output colors
-        for (int i = 0; i != output_colors.Count; i++)
+        for (int i = 0; i != output_tiles.Count; i++)
         {
-            ct = output_colors[i].GetComponent(typeof(ColorTile)) as ColorTile;
             // check if this exists in output colors
-            if (adder_preview.color.Equals(ct.color))
+            if (adder_preview.color.Equals(output_tiles[i].color))
             {
                 exists = true;
                 break;
@@ -480,12 +483,15 @@ public class ChangeColors : MonoBehaviour, IBeginDragHandler, IDragHandler
         {
             // create a new color tile
             GameObject newObj = Instantiate(prefab, output_viewport.transform) as GameObject;
-            newObj.name = "output_color_" + output_colors.Count.ToString();
+            newObj.name = "output_color_" + output_tiles.Count.ToString();
             ct = newObj.GetComponent(typeof(ColorTile)) as ColorTile;
             ct.Setup(false, adder_preview.color, adder_preview.color, ref newObj);
 
             // add to the output palette
             output_colors.Add(newObj);
+
+            // add color tile to our list of tiles
+            output_tiles.Add(ct);
 
             // add undo action
             ChangeColors.AddUndo("delete color", adder_preview.color, adder_preview.color);
