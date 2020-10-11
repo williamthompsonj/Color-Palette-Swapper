@@ -15,7 +15,7 @@ using B83.Image.BMP;
 public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
 {
     const string MENU_TITLE = "Open Image Palette";
-    const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, jfi";
+    const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, .jfi";
     const string OTHER_EXTENSIONS = "bmp,png,jpg,jpeg,jpe,jif,jfif,jfi";
 
     public RawImage input_image;

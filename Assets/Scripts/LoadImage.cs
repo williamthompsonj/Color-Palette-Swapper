@@ -16,8 +16,10 @@ using System.Text;
 public class LoadImage : MonoBehaviour, IPointerDownHandler
 {
     const string MENU_TITLE = "Open Image To Color Swap";
-    const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, jfi";
-    const string OTHER_EXTENSIONS = "bmp,png,jpg,jpeg,jpe,jif,jfif,jfi,bmp";
+    const string WEBGL_EXTENSIONS = ".bmp,.png,.jpg,.jpeg,.jpe,.jif,.jfif,.jfi";
+    const string OTHER_EXTENSIONS = "bmp,png,jpg,jpeg,jpe,jif,jfif,jfi";
+    const string EXT_NAMES = "Bitmap,Portable Network Graphic,JPEG,JPEG,JPEG,JPEG,JPEG,JPEG";
+    private SFB.ExtensionFilter[] ef;
 
     public RawImage input_image;
     public RawImage output_image;
@@ -25,6 +27,13 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
     public void Awake()
     {
         useGUILayout = false;
+        string[] str_arr = OTHER_EXTENSIONS.Split(',');
+        string[] name_arr = EXT_NAMES.Split(',');
+        ef = new SFB.ExtensionFilter[str_arr.Length];
+        for (int i = 0; i != str_arr.Length; i++)
+        {
+            ef[i] = new SFB.ExtensionFilter(name_arr[i], str_arr[i]);
+        }
     }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -36,7 +45,7 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        UploadFile(gameObject.name, "OnFileUpload", WEBGL_EXTENSIONS, false);
+        UploadFile(gameObject.name, "OnFileUpload", ef, false);
     }
 
     // Called from browser
@@ -57,7 +66,7 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
 
     private void OnClick()
     {
-        var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", OTHER_EXTENSIONS, false);
+        var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", ef, false);
         if (paths.Length < 1) return;
 
         StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));

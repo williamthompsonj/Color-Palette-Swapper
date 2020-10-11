@@ -17,13 +17,23 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
     const string MENU_TITLE = "Load Text Color Palette (HEX Mapping / GIMP GPL)";
     const string WEBGL_EXTENSIONS = ".txt, .hex, .gpl";
     const string OTHER_EXTENSIONS = "txt,hex,gpl";
+    const string EXT_NAMES = "Text,Hex,Gimp GPL";
+    private SFB.ExtensionFilter[] ef;
 
     private HashSet<ColorPlus> color_list = new HashSet<ColorPlus>();
     private ColorPlus transparent = new ColorPlus();
+    private bool find_closest;
 
     public void Awake()
     {
         useGUILayout = false;
+        string[] str_arr = OTHER_EXTENSIONS.Split(',');
+        string[] name_arr = EXT_NAMES.Split(',');
+        ef = new SFB.ExtensionFilter[str_arr.Length];
+        for (int i = 0; i != str_arr.Length; i++)
+        {
+            ef[i] = new SFB.ExtensionFilter(name_arr[i], str_arr[i]);
+        }
     }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -35,7 +45,7 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        UploadFile(gameObject.name, "OnFileUpload", WEBGL_EXTENSIONS, false);
+        UploadFile(gameObject.name, "OnFileUpload", ef, false);
     }
 
     // Called from browser
@@ -57,7 +67,7 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 
     private void OnClick()
     {
-        var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", OTHER_EXTENSIONS, false);
+        var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", ef, false);
         if (paths.Length > 0)
             StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
     }
@@ -70,8 +80,9 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
         string text = loader.downloadHandler.text;
 
         // dispose of the loader in parallel thread since it can slow down overall time
-        Task task = new Task(() => { loader.Dispose(); });
-        task.Start();
+        //Task task = new Task(() => { loader.Dispose(); });
+        //task.Start();
+        loader.Dispose();
 
         // clear our color list
         color_list.Clear();
@@ -89,25 +100,28 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
         // sample string to check
         string test_str = text.Substring(0, 12);
 
-        bool find = true;
+        // default state for finding nearst color match
+        find_closest = false;
 
         // check what kind of text file this is
         if (string.Compare(test_str, "gimp palette") == 0)
         {
             // this is a GPL palette, process with GPL function
             ProcessGPL(text);
+            find_closest = true;
         }
         else
         {
             // this is a Hex palette, process with hex function
             ProcessHex(text);
-            find = false;
         }
 
         // save output palette list
         ImageUtilities.output_palette.Clear();
         ImageUtilities.output_palette.AddRange(color_list);
-        if(find) ImageUtilities.FindClosest();
+
+        // figure out if we want to find closest match
+        if(find_closest) ImageUtilities.FindClosest();
 
         // show results of recolor work
         ImageUtilities.SetOutputImage();
@@ -216,6 +230,7 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
             else
             {
                 // only adding this color, no mapping
+                find_closest = true;
                 color_list.Add(in_color);
             }
         }
