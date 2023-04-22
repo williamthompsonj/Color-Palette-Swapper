@@ -45,7 +45,7 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        UploadFile(gameObject.name, "OnFileUpload", ef, false);
+        UploadFile(gameObject.name, "OnFileUpload", WEBGL_EXTENSIONS, false);
     }
 
     // Called from browser

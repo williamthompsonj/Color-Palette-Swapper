@@ -29,10 +29,17 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
         useGUILayout = false;
         string[] str_arr = OTHER_EXTENSIONS.Split(',');
         string[] name_arr = EXT_NAMES.Split(',');
-        ef = new SFB.ExtensionFilter[str_arr.Length];
+        ef = new SFB.ExtensionFilter[2+str_arr.Length];
+
+        // make all supported file types the default option
+        ef[0] = new SFB.ExtensionFilter("All Supported", OTHER_EXTENSIONS);
+
+        // allow any file type
+        ef[1] = new SFB.ExtensionFilter("Any File", "*");
+
         for (int i = 0; i != str_arr.Length; i++)
         {
-            ef[i] = new SFB.ExtensionFilter(name_arr[i], str_arr[i]);
+            ef[2+i] = new SFB.ExtensionFilter(name_arr[i], str_arr[i]);
         }
     }
 
@@ -45,7 +52,7 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        UploadFile(gameObject.name, "OnFileUpload", ef, false);
+        UploadFile(gameObject.name, "OnFileUpload", WEBGL_EXTENSIONS, false);
     }
 
     // Called from browser
@@ -61,14 +68,19 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
 
     void Start()
     {
+        // add click listener
         (GetComponent<Button>()).onClick.AddListener(OnClick);
     }
 
     private void OnClick()
     {
+        // show user a file select window
         var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", ef, false);
+
+        // check if file name selected
         if (paths.Length < 1) return;
 
+        // begin processing chosen file
         StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
     }
 #endif

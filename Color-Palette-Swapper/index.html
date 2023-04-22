@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Cache-Control" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta name="description" content="Color Palette Swap Change Tool">
+<meta name="keywords" content="Color, Palette, Swap, Change, Tool, PNG, Transparent, Free, Online">
+<meta name="author" content="William.ThompsonJ">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Palette Swap Tool | William.ThompsonJ</title>
+<link rel="shortcut icon" href="TemplateData/favicon.ico">
+<link rel="stylesheet" href="TemplateData/style.css">
+</head>
+<body>
+<div>
+<a href="https://opengameart.org">OpenGameArt</a> has all kinds of artwork, music, or other game creation materials.
+<a href="https://lospec.com/palette-list">lospec</a> has a great selection of color palettes.
+<a href="https://www.mapeditor.org">Tiled</a> is a fantastic game map creation tool.
+</div>
+<br>
+<div id="unity-container" class="unity-desktop">
+<canvas id="unity-canvas"></canvas>
+<div id="unity-loading-bar">
+<div id="unity-logo"></div>
+<div id="unity-progress-bar-empty">
+<div id="unity-progress-bar-full"></div>
+</div>
+</div>
+<div id="unity-footer">
+<div id="unity-webgl-logo"></div>
+<div id="unity-fullscreen-button"></div>
+<div id="unity-build-title">Color Palette Swapper</div>
+</div>
+</div>
+<script>
+var buildUrl = "Build";
+var loaderUrl = buildUrl + "/Color-Palette-Swapper.loader.js";
+var config = {
+dataUrl: buildUrl + "/Color-Palette-Swapper.data",
+frameworkUrl: buildUrl + "/Color-Palette-Swapper.framework.js",
+codeUrl: buildUrl + "/Color-Palette-Swapper.wasm",
+streamingAssetsUrl: "StreamingAssets",
+companyName: "William.ThompsonJ",
+productName: "Color Palette Swapper",
+productVersion: "v1.0, July 2020",
+};
+
+var container = document.querySelector("#unity-container");
+var canvas = document.querySelector("#unity-canvas");
+var loadingBar = document.querySelector("#unity-loading-bar");
+var progressBarFull = document.querySelector("#unity-progress-bar-full");
+var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+
+if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+container.className = "unity-mobile";
+config.devicePixelRatio = 1;
+} else {
+canvas.style.width = "1024px";
+canvas.style.height = "576px";
+}
+loadingBar.style.display = "block";
+
+var script = document.createElement("script");
+script.src = loaderUrl;
+script.onload = () => {
+createUnityInstance(canvas, config, (progress) => {
+progressBarFull.style.width = 100 * progress + "%";
+}).then((unityInstance) => {
+loadingBar.style.display = "none";
+fullscreenButton.onclick = () => {
+unityInstance.SetFullscreen(1);
+};
+}).catch((message) => {
+alert(message);
+});
+};
+document.body.appendChild(script);
+</script>
+</body>
+</html>
