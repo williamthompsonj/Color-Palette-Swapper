@@ -18,6 +18,9 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
     const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, .jfi";
     const string OTHER_EXTENSIONS = "bmp,png,jpg,jpeg,jpe,jif,jfif,jfi";
 
+    // send debug data to screen
+    public GameObject debug_panel;
+
     public RawImage input_image;
     public RawImage output_image;
 
@@ -51,16 +54,20 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
 
     void Start()
     {
+        // add click listener
         (GetComponent<Button>()).onClick.AddListener(OnClick);
     }
 
     private void OnClick()
     {
+        // show user a file select window
         var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", OTHER_EXTENSIONS, false);
+
+        // check if file name selected
         if (paths.Length < 1) return;
 
-        string thePath = new System.Uri(paths[0]).AbsoluteUri;
-        StartCoroutine(OutputRoutine(thePath));
+        // begin processing chosen file
+        StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
     }
 #endif
 
@@ -68,7 +75,8 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
     {
         url = url.Replace('\\', '/');
 
-        using (var loader = UnityWebRequestTexture.GetTexture(url))
+        // should be PNG or JPEG
+        using (UnityWebRequest loader = UnityWebRequestTexture.GetTexture(url))
         {
             yield return loader.SendWebRequest();
 
@@ -99,6 +107,12 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
             }
         }
 
+        // setup debug window info
+        //var debug_text = debug_panel.transform.Find("DebugText").GetComponent<Text>();
+        //debug_text.text = url;
+
+        //ImageUtilities.HideMainButtons();
+        //debug_panel.transform.position = new Vector3();
 
         // auto-magically find nearest color neighbor using CIE2000 color distance algorithm
         ImageUtilities.FindClosest();
