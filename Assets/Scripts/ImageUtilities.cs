@@ -26,6 +26,8 @@ public class ImageUtilities : MonoBehaviour
 	public RawImage raw_input;
 	public RawImage raw_output;
 
+	public static GameObject wait_panel;
+
 	// main menu buttons
 	public static GameObject[] buttons;
 
@@ -307,8 +309,22 @@ public class ImageUtilities : MonoBehaviour
 
 		Color32 transparent = new Color32((byte)255, (byte)255, (byte)255, (byte)0);
 
+		// please wait window
+		wait_panel = GameObject.Find("WaitPanel");
+
+		// show user that program is working and to wait
+		wait_panel.OpenPanel();
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+    //
+	// WebGL
+	//
+		for (var i=0; i < input_palette.Count; i++)
+		{
+#else
 		Parallel.For(0, input_palette.Count, i =>
 		{
+#endif
 			// some working varialbes
 			double distance = 0, last = 0;
 			int j;
@@ -390,7 +406,17 @@ public class ImageUtilities : MonoBehaviour
 				// ensure data is kept
 				input_palette[i] = in_color;
 			}
+#if UNITY_WEBGL && !UNITY_EDITOR
+    //
+	// WebGL
+	//
+		}
+#else
 		});
+#endif
+
+		// close the please wait panel
+		wait_panel.ClosePanel();
 	}
 
 	public static void SetOutputImage()
