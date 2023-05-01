@@ -427,7 +427,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 602825069}
   m_HandleRect: {fileID: 602825068}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7408,7 +7408,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 395420655}
   m_HandleRect: {fileID: 395420654}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7535,7 +7535,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1081904566}
   m_HandleRect: {fileID: 1081904565}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -8104,7 +8104,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 857283166}
   m_HandleRect: {fileID: 857283165}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -8547,8 +8547,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -20}
-  m_SizeDelta: {x: 230, y: 200}
+  m_AnchoredPosition: {x: 0, y: -70}
+  m_SizeDelta: {x: 230, y: 110}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1072810601
 MonoBehaviour:
@@ -10668,8 +10668,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1623788963}
   m_HandleRect: {fileID: 1623788962}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 1
+  m_Value: 0
+  m_Size: 0.9999998
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -11111,7 +11111,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Default String
+  m_Text: Debug String
 --- !u!1 &1380439182
 GameObject:
   m_ObjectHideFlags: 0
@@ -15754,7 +15754,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e218d72daeca6146b1dd63fdcfb6b88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debug_panel: {fileID: 1201266625}
   input_image: {fileID: 857395604}
   output_image: {fileID: 522782449}
 --- !u!1 &1851819819
@@ -16799,7 +16798,7 @@ GameObject:
   - component: {fileID: 1953757664}
   m_Layer: 0
   m_Name: Main_BtnZoomOut
-  m_TagString: Untagged
+  m_TagString: UI Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -17020,10 +17019,12 @@ MonoBehaviour:
 
     v1.0, July 2020
 
+    v1.1, April 2023
 
-    Thanks for using this
-    tool! This started from a discussion on OpenGameArt.org about a lack of pixel
-    artist tools. Please feel free to contact me if you feel so inclined.
+
+    Thanks
+    for using this tool! This started from a discussion on OpenGameArt.org about
+    a lack of pixel artist tools. Please feel free to contact me if you feel so inclined.
 
 
     william.thompsonj@gmail.com'
@@ -17916,7 +17917,7 @@ GameObject:
   - component: {fileID: 2139563311}
   m_Layer: 0
   m_Name: Main_BtnZoomIn
-  m_TagString: Untagged
+  m_TagString: UI Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -4,9 +4,9 @@ using UnityEngine.EventSystems;
 
 public class WaitScreen : MonoBehaviour, IBeginDragHandler, IDragHandler
 {
-    private GameObject wait_panel;
+    private static GameObject wait_panel;
 
-    private Vector3 begin_vec, current_vec, hide_vec;
+    private static Vector3 begin_vec, current_vec, hide_vec;
 
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -33,13 +33,13 @@ public class WaitScreen : MonoBehaviour, IBeginDragHandler, IDragHandler
         wait_panel.transform.position = hide_vec;
     }
 
-    public void OpenPanel()
+    public static void OpenPanel()
     {
-        ImageUtilities.HideMainButtons();
         wait_panel.transform.position = current_vec;
+        ImageUtilities.HideMainButtons();
     }
 
-    public void ClosePanel()
+    public static void ClosePanel()
     {
         ImageUtilities.ShowMainButtons();
         wait_panel.transform.position = hide_vec;

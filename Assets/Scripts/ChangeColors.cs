@@ -1,11 +1,12 @@
-﻿using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System;
 using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class ChangeColors : MonoBehaviour, IBeginDragHandler, IDragHandler
 {
@@ -253,9 +254,29 @@ public class ChangeColors : MonoBehaviour, IBeginDragHandler, IDragHandler
 
     private void ShowColorPicker()
     {
+        AsyncWait();
+    }
+
+    private async void AsyncWait()
+    {
+        // Working... Please Wait
+        WaitScreen.OpenPanel();
+
+        await AsyncRoutine();
+
+        // done working
+        WaitScreen.ClosePanel();
+    }
+
+    private async Task<int> AsyncRoutine()
+    {
+        await Task.Delay(0);
+
         ImageUtilities.HideMainButtons();
         PopulatePalettes();
         color_picker.transform.position = current_vec;
+
+        return 1;
     }
 
     private void PopulatePalettes()

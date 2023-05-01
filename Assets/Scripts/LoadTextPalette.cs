@@ -1,24 +1,23 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using SFB;
-using System;
+using System.Text.RegularExpressions;
 
 [RequireComponent(typeof(Button))]
 public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 {
-    const string MENU_TITLE = "Load Text Color Palette (HEX Mapping / GIMP GPL)";
     const string WEBGL_EXTENSIONS = ".txt, .hex, .gpl";
-    const string OTHER_EXTENSIONS = "txt,hex,gpl";
-    const string EXT_NAMES = "Text,Hex,Gimp GPL";
-    private SFB.ExtensionFilter[] ef;
+    const string MENU_TITLE = "Load Text Color Palette (HEX Mapping / GIMP GPL)";
+
+    private SFB.ExtensionFilter[] extensions;
 
     private HashSet<ColorPlus> color_list = new HashSet<ColorPlus>();
     private ColorPlus transparent = new ColorPlus();
@@ -27,13 +26,11 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
     public void Awake()
     {
         useGUILayout = false;
-        string[] str_arr = OTHER_EXTENSIONS.Split(',');
-        string[] name_arr = EXT_NAMES.Split(',');
-        ef = new SFB.ExtensionFilter[str_arr.Length];
-        for (int i = 0; i != str_arr.Length; i++)
+        extensions = new[]
         {
-            ef[i] = new SFB.ExtensionFilter(name_arr[i], str_arr[i]);
-        }
+            new SFB.ExtensionFilter("Text Files", "txt", "hex", "gpl"),
+            new SFB.ExtensionFilter("All Files", "*"),
+        };
     }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -51,8 +48,12 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
     // Called from browser
     public void OnFileUpload(string url)
     {
-        if(url.Length > 0)
-            StartCoroutine(OutputRoutine(url));
+        // check if file name selected
+        if (url.Length < 1) return;
+        
+        // process file
+        //StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
+        AsyncWait(url);
     }
 #else
     //
@@ -62,33 +63,68 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 
     public void Start()
     {
+        setupFuncs();
+
         (GetComponent<Button>()).onClick.AddListener(OnClick);
     }
 
     private void OnClick()
     {
-        var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", ef, false);
-        if (paths.Length > 0)
-            StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
+        Int64 time_start = PerfMon.Ticks();
+
+        var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", extensions, false);
+
+        // check if file name selected
+        if (paths.Length < 1)
+            return;
+
+        // process file
+        //StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
+        AsyncWait(new System.Uri(paths[0]).AbsoluteUri);
+
+        perf("OnClick", time_start);
     }
 #endif
 
-    private IEnumerator OutputRoutine(string url)
+    async void AsyncWait(string url)
     {
-        var loader = UnityWebRequest.Get(url);
-        yield return loader.SendWebRequest();
-        string text = loader.downloadHandler.text;
+        Int64 time_start = PerfMon.Ticks();
 
-        // dispose of the loader in parallel thread since it can slow down overall time
-        //Task task = new Task(() => { loader.Dispose(); });
-        //task.Start();
-        loader.Dispose();
+        // Working... Please Wait
+        WaitScreen.OpenPanel();
 
-        // clear our color list
-        color_list.Clear();
+        await AsyncRoutine(url);
+
+        // done working
+        WaitScreen.ClosePanel();
+
+        perf("AsyncWait", time_start);
+    }
+
+    async Task<string> AsyncRoutine(string url)
+    {
+        Int64 time_start = PerfMon.Ticks();
+
+        // ensure URL is valid
+        url = url.Replace('\\', '/');
+
+        string text = "";
+
+        // should be PNG or JPEG
+        using (UnityWebRequest loader = UnityWebRequest.Get(url))
+        {
+            await loader.SendWebRequest();
+            text = loader.downloadHandler.text;
+        }
 
         // make lowercase
         text = text.ToLower().Trim();
+
+        // ensure text file has content
+        if (text.Length < 1)
+        {
+            return null;
+        }
 
         // replace all whitespace with single space
         text = (Regex.Replace(text, "[ \f\r\t\v]+", " "));
@@ -102,6 +138,77 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 
         // default state for finding nearst color match
         find_closest = false;
+
+        // clear our color list
+        color_list.Clear();
+
+        // check what kind of text file this is
+        if (string.Compare(test_str, "gimp palette") == 0)
+        {
+            // this is a GPL palette, process with GPL function
+            ProcessGPL(text);
+            find_closest = true;
+        }
+        else
+        {
+            // this is a Hex palette, process with hex function
+            ProcessHex(text);
+        }
+
+        // save output palette list
+        ImageUtilities.output_palette.Clear();
+        ImageUtilities.output_palette.AddRange(color_list);
+
+        // figure out if we want to find closest match
+        if (find_closest)
+            ImageUtilities.FindClosest();
+
+        // show results of recolor work
+        ImageUtilities.SetOutputImage();
+
+        perf("AsyncRoutine", time_start);
+
+        return null;
+    }
+
+    private IEnumerator OutputRoutine(string url)
+    {
+        Int64 time_start = PerfMon.Ticks();
+
+        // ensure URL is valid
+        url = url.Replace('\\', '/');
+
+        var loader = UnityWebRequest.Get(url);
+        yield return loader.SendWebRequest();
+        string text = loader.downloadHandler.text;
+
+        // dispose of the loader in parallel thread since it can slow down overall time
+        //Task task = new Task(() => { loader.Dispose(); });
+        //task.Start();
+        loader.Dispose();
+
+        // make lowercase
+        text = text.ToLower().Trim();
+
+        // ensure text file has content
+        if (text.Length < 1)
+            yield break;
+
+        // replace all whitespace with single space
+        text = (Regex.Replace(text, "[ \f\r\t\v]+", " "));
+
+        // remove whitespace at beginning and end of lines
+        text = text.Replace(" \n", "\n");
+        text = text.Replace("\n ", "\n");
+
+        // sample string to check
+        string test_str = text.Substring(0, 12);
+
+        // default state for finding nearst color match
+        find_closest = false;
+
+        // clear our color list
+        color_list.Clear();
 
         // check what kind of text file this is
         if (string.Compare(test_str, "gimp palette") == 0)
@@ -125,10 +232,14 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 
         // show results of recolor work
         ImageUtilities.SetOutputImage();
+
+        perf("OutputRoutine", time_start);
     }
 
     private void ProcessGPL(string text)
     {
+        Int64 time_start = PerfMon.Ticks();
+
         // https://gitlab.gnome.org/GNOME/gimp/-/blob/gimp-2-10/app/core/gimppalette-load.c#L39
         text = text.Replace("gimp palette\n", "");
         text = (Regex.Replace(text, "name:[.]*$", ""));
@@ -155,10 +266,14 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
                 color_list.Add(int.Parse(line[0]) << 24 | int.Parse(line[1]) << 16 | int.Parse(line[2]) << 8 | 255);
             }
         }
+
+        perf("ProcessGPL", time_start);
     }
 
     private void ProcessHex(string text)
     {
+        Int64 time_start = PerfMon.Ticks();
+
         // remove comments
         text = (Regex.Replace(text, "//[.]*$", ""));
 
@@ -234,5 +349,22 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
                 color_list.Add(in_color);
             }
         }
+
+        perf("ProcessHex", time_start);
+    }
+
+    private static void perf(string func, Int64 runtime)
+    {
+        PerfMon.Call("LoadTextPalette", func, runtime);
+    }
+
+    private static void setupFuncs()
+    {
+        PerfMon.SetupFunc("LoadTextPalette", "OnClick");
+        PerfMon.SetupFunc("LoadTextPalette", "AsyncWait");
+        PerfMon.SetupFunc("LoadTextPalette", "AsyncRoutine");
+        PerfMon.SetupFunc("LoadTextPalette", "OutputRoutine");
+        PerfMon.SetupFunc("LoadTextPalette", "ProcessGPL");
+        PerfMon.SetupFunc("LoadTextPalette", "ProcessHex");
     }
 }

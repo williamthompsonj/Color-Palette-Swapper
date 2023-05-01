@@ -46,5 +46,7 @@ public class InfoScreen : MonoBehaviour, IBeginDragHandler, IDragHandler
         ImageUtilities.ShowMainButtons();
         //current_vec = info_panel.transform.position;
         info_panel.transform.position = hide_vec;
+
+        PerfMon.Report();
     }
 }
