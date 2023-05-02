@@ -14,10 +14,7 @@ using System.Text.RegularExpressions;
 [RequireComponent(typeof(Button))]
 public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
 {
-    const string WEBGL_EXTENSIONS = ".txt, .hex, .gpl";
     const string MENU_TITLE = "Load Text Color Palette (HEX Mapping / GIMP GPL)";
-
-    private SFB.ExtensionFilter[] extensions;
 
     private HashSet<ColorPlus> color_list = new HashSet<ColorPlus>();
     private ColorPlus transparent = new ColorPlus();
@@ -26,17 +23,14 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
     public void Awake()
     {
         useGUILayout = false;
-        extensions = new[]
-        {
-            new SFB.ExtensionFilter("Text Files", "txt", "hex", "gpl"),
-            new SFB.ExtensionFilter("All Files", "*"),
-        };
     }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     //
     // WebGL
     //
+    const string WEBGL_EXTENSIONS = ".txt, .hex, .gpl";
+
     [DllImport("__Internal")]
     private static extern void UploadFile(string gameObjectName, string methodName, string filter, bool multiple);
 
@@ -59,7 +53,13 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
     //
     // Standalone platforms & editor
     //
-    public void OnPointerDown(PointerEventData eventData) { }
+    public void OnPointerDown(PointerEventData eventData) {}
+
+    private SFB.ExtensionFilter[] extensions = new[]
+    {
+        new SFB.ExtensionFilter("Text Files", "txt", "hex", "gpl"),
+        new SFB.ExtensionFilter("All Files", "*"),
+    };
 
     public void Start()
     {
@@ -75,8 +75,7 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
         var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", extensions, false);
 
         // check if file name selected
-        if (paths.Length < 1)
-            return;
+        if (paths.Length < 1) return;
 
         // process file
         //StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
@@ -86,11 +85,12 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
     }
 #endif
 
-    async void AsyncWait(string url)
+    private async void AsyncWait(string url)
     {
         Int64 time_start = PerfMon.Ticks();
 
-        // Working... Please Wait
+        // Working... Please wait
+        WaitScreen.SetText("Loading text palette... Please Wait...");
         WaitScreen.OpenPanel();
 
         await AsyncRoutine(url);
@@ -101,7 +101,7 @@ public class LoadTextPalette : MonoBehaviour, IPointerDownHandler
         perf("AsyncWait", time_start);
     }
 
-    async Task<string> AsyncRoutine(string url)
+    private async Task<string> AsyncRoutine(string url)
     {
         Int64 time_start = PerfMon.Ticks();
 

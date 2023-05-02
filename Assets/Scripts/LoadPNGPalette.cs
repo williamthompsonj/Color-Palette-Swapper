@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -15,10 +14,7 @@ using B83.Image.BMP;
 [RequireComponent(typeof(Button))]
 public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
 {
-    const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, .jfi";
     const string MENU_TITLE = "Open Image Palette";
-
-    private SFB.ExtensionFilter[] extensions;
 
     public RawImage input_image;
     public RawImage output_image;
@@ -26,17 +22,14 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
     public void Awake()
     {
         useGUILayout = false;
-        extensions = new[]
-        {
-            new SFB.ExtensionFilter("Image Files", "bmp", "png", "jpg", "jpeg", "jpe", "jif", "jfif", "jfi"),
-            new SFB.ExtensionFilter("All Files", "*"),
-        };
     }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     //
     // WebGL
     //
+    const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, .jfi";
+
     [DllImport("__Internal")]
     private static extern void UploadFile(string gameObjectName, string methodName, string filter, bool multiple);
 
@@ -50,7 +43,7 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
     {
         // check if file name selected
         if (url.Length < 1) return;
-        
+
         // process file
         //StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
         AsyncWait(url);
@@ -60,6 +53,12 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
     // Standalone platforms & editor
     //
     public void OnPointerDown(PointerEventData eventData) { }
+
+    private SFB.ExtensionFilter[] extensions = new[]
+    {
+        new SFB.ExtensionFilter("Image Files", "bmp", "png", "jpg", "jpeg", "jpe", "jif", "jfif", "jfi"),
+        new SFB.ExtensionFilter("All Files", "*"),
+    };
 
     void Start()
     {
@@ -77,10 +76,7 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
         var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", extensions, false);
 
         // check if file name selected
-        if (paths.Length < 1)
-        {
-            return;
-        }
+        if (paths.Length < 1) return;
 
         // process file
         //StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
@@ -90,11 +86,12 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
     }
 #endif
 
-    async void AsyncWait(string url)
+    private async void AsyncWait(string url)
     {
         Int64 time_start = PerfMon.Ticks();
 
-        // Working... Please Wait
+        // Working... Please wait
+        WaitScreen.SetText("Loading image palette... Please Wait...");
         WaitScreen.OpenPanel();
 
         await AsyncRoutine(url);
@@ -105,7 +102,7 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
         perf("AsyncWait", time_start);
     }
 
-    async Task<string> AsyncRoutine(string url)
+    private async Task<string> AsyncRoutine(string url)
     {
         Int64 time_start = PerfMon.Ticks();
 
@@ -194,13 +191,6 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
             }
         }
 
-        // setup debug window info
-        //var debug_text = debug_panel.transform.Find("DebugText").GetComponent<Text>();
-        //debug_text.text = url;
-
-        //ImageUtilities.HideMainButtons();
-        //debug_panel.transform.position = new Vector3();
-
         // auto-magically find nearest color neighbor using CIE2000 color distance algorithm
         ImageUtilities.FindClosest();
 
@@ -221,5 +211,6 @@ public class LoadPNGPalette : MonoBehaviour, IPointerDownHandler
         PerfMon.SetupFunc("LoadPNGPalette", "AsyncWait");
         PerfMon.SetupFunc("LoadPNGPalette", "AsyncRoutine");
         PerfMon.SetupFunc("LoadPNGPalette", "OutputRoutine");
+        PerfMon.SetupFunc("LoadPNGPalette", "NonAsyncRoutine");
     }
 }

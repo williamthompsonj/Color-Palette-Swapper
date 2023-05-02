@@ -95,6 +95,7 @@ public class ImageUtilities : MonoBehaviour
 	}
 
 	// helper function for CIE2000
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static double deg2Rad(double deg)
 	{
 		// Math.PI / 180.0 = 0.01745329251994329576923690768489
@@ -102,6 +103,7 @@ public class ImageUtilities : MonoBehaviour
 	}
 
 	// helper function for CIE2000
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static double rad2Deg(double rad)
 	{
 		// 180 / Math.PI = 0.01745329251994329576923690768489
@@ -328,101 +330,207 @@ public class ImageUtilities : MonoBehaviour
 
 		Color32 transparent = new Color32((byte)255, (byte)255, (byte)255, (byte)0);
 
-#if UNITY_WEBGL && !UNITY_EDITOR
+		// turn this loop into a series of async processes
 		for (var i=0; i < input_palette.Count; i++)
 		{
-#else
-		Parallel.For(0, input_palette.Count, i =>
+			//AsyncColorMatch(transparent, i);
+			NonAsyncColorMatch(transparent, i);
+		}
+
+		perf("FindClosest", time_start);
+	}
+
+	private static async void AsyncColorMatch(ColorPlus transparent, int i)
+	{
+		Int64 time_start = PerfMon.Ticks();
+
+		await AsyncColorWorker(transparent, i);
+
+		perf("AsyncColorMatch", time_start);
+	}
+
+	private static async Task<int> AsyncColorWorker(ColorPlus transparent, int i)
+	{
+		Int64 time_start = PerfMon.Ticks();
+
+		// some working varialbes
+		double distance = 0, last = 0;
+		int j;
+
+		// short reference to this color
+		ColorPlus in_color = input_palette[i];
+		ColorPlus closest = new ColorPlus();
+
+		bool not_done = true;
+
+		// check if transparent
+		if (in_color.alpha <= transparent_threshhold)
 		{
-#endif
-			// some working varialbes
-			double distance = 0, last = 0;
-			int j;
+			// set this pixel to transparent
+			in_color.match = transparent;
+			input_palette[i] = in_color;
+			not_done = false;
+		}
 
-			// short reference to this color
-			ColorPlus in_color = input_palette[i];
-			ColorPlus closest = new ColorPlus();
+		// check if color is gray
+		if (not_done && in_color.achromatic)
+		{
+			// max possible difference between two gray colors (black -> white)
+			distance = 255;
 
-			bool not_done = true;
-
-			// check if transparent
-			if (in_color.alpha <= transparent_threshhold)
+			// cycle through output palette
+			for (j = 0; j < output_palette.Count; j++)
 			{
-				// set this pixel to transparent
-				in_color.match = transparent;
-				input_palette[i] = in_color;
-				not_done = false;
-			}
+				// skip colors that aren't gray
+				if (!output_palette[j].achromatic)
+					continue;
 
-			// check if color is gray
-			if (not_done && in_color.achromatic)
-			{
-				// max possible difference between two gray colors (black -> white)
-				distance = 255;
+				// calculate absolute difference between grays
+				if (in_color.brightness > output_palette[j].brightness)
+					last = in_color.brightness - output_palette[j].brightness;
+				else
+					last = output_palette[j].brightness - in_color.brightness;
 
-				// cycle through output palette
-				for (j = 0; j < output_palette.Count; j++)
+				if (distance > last)
 				{
-					// skip colors that aren't gray
-					if (!output_palette[j].achromatic) continue;
-
-					// calculate absolute difference between grays
-					if (in_color.brightness > output_palette[j].brightness)
-						last = in_color.brightness - output_palette[j].brightness;
-					else
-						last = output_palette[j].brightness - in_color.brightness;
-
-					if (distance > last)
-					{
-						closest = output_palette[j];
-						distance = last;
-					}
-				}
-
-				// check if source gray is sufficiently close to the nearest match
-				if (distance <= achromatic_match)
-				{
-					// best possible match is saved
-					in_color.match = new Color32((byte)closest.red, (byte)closest.green, (byte)closest.blue, (byte)in_color.alpha);
-
-					// assign data to input palette
-					input_palette[i] = in_color;
-
-					// stop calculating for this color
-					not_done = false;
+					closest = output_palette[j];
+					distance = last;
 				}
 			}
 
-			if (not_done)
+			// check if source gray is sufficiently close to the nearest match
+			if (distance <= achromatic_match)
 			{
-				// take first output_palette color as nearest match
-				closest = output_palette[0];
-				last = CIE2000(in_color, output_palette[0]);
-
-				// see if another color is closer than the first one
-				for (j = 1; j < output_palette.Count; j++)
-				{
-					distance = CIE2000(in_color, output_palette[j]);
-					if (last > distance)
-					{
-						last = distance;
-						closest = output_palette[j];
-					}
-				}
-
 				// best possible match is saved
 				in_color.match = new Color32((byte)closest.red, (byte)closest.green, (byte)closest.blue, (byte)in_color.alpha);
 
-				// ensure data is kept
+				// assign data to input palette
 				input_palette[i] = in_color;
-			}
-#if UNITY_WEBGL && !UNITY_EDITOR
-		}
-#else
-		});
-#endif
 
-		perf("FindClosest", time_start);
+				// stop calculating for this color
+				not_done = false;
+			}
+		}
+
+		if (not_done)
+		{
+			// take first output_palette color as nearest match
+			closest = output_palette[0];
+			last = CIE2000(in_color, output_palette[0]);
+
+			// see if another color is closer than the first one
+			for (j = 1; j < output_palette.Count; j++)
+			{
+				distance = CIE2000(in_color, output_palette[j]);
+				if (last > distance)
+				{
+					last = distance;
+					closest = output_palette[j];
+				}
+			}
+
+			// best possible match is saved
+			in_color.match = new Color32((byte)closest.red, (byte)closest.green, (byte)closest.blue, (byte)in_color.alpha);
+
+			// ensure data is kept
+			input_palette[i] = in_color;
+		}
+
+		await Task.Delay(0);
+
+		perf("AsyncColorWorker", time_start);
+
+		return 1;
+	}
+
+	private static void NonAsyncColorMatch(ColorPlus transparent, int i)
+	{
+		Int64 time_start = PerfMon.Ticks();
+
+		// some working varialbes
+		double distance = 0, last = 0;
+		int j;
+
+		// short reference to this color
+		ColorPlus in_color = input_palette[i];
+		ColorPlus closest = new ColorPlus();
+
+		bool not_done = true;
+
+		// check if transparent
+		if (in_color.alpha <= transparent_threshhold)
+		{
+			// set this pixel to transparent
+			in_color.match = transparent;
+			input_palette[i] = in_color;
+			not_done = false;
+		}
+
+		// check if color is gray
+		if (not_done && in_color.achromatic)
+		{
+			// max possible difference between two gray colors (black -> white)
+			distance = 255;
+
+			// cycle through output palette
+			for (j = 0; j < output_palette.Count; j++)
+			{
+				// skip colors that aren't gray
+				if (!output_palette[j].achromatic)
+					continue;
+
+				// calculate absolute difference between grays
+				if (in_color.brightness > output_palette[j].brightness)
+					last = in_color.brightness - output_palette[j].brightness;
+				else
+					last = output_palette[j].brightness - in_color.brightness;
+
+				if (distance > last)
+				{
+					closest = output_palette[j];
+					distance = last;
+				}
+			}
+
+			// check if source gray is sufficiently close to the nearest match
+			if (distance <= achromatic_match)
+			{
+				// best possible match is saved
+				in_color.match = new Color32((byte)closest.red, (byte)closest.green, (byte)closest.blue, (byte)in_color.alpha);
+
+				// assign data to input palette
+				input_palette[i] = in_color;
+
+				// stop calculating for this color
+				not_done = false;
+			}
+		}
+
+		if (not_done)
+		{
+			// take first output_palette color as nearest match
+			closest = output_palette[0];
+			last = CIE2000(in_color, output_palette[0]);
+
+			// see if another color is closer than the first one
+			for (j = 1; j < output_palette.Count; j++)
+			{
+				distance = CIE2000(in_color, output_palette[j]);
+				if (last > distance)
+				{
+					last = distance;
+					closest = output_palette[j];
+				}
+			}
+
+			// best possible match is saved
+			in_color.match = new Color32((byte)closest.red, (byte)closest.green, (byte)closest.blue, (byte)in_color.alpha);
+
+			// ensure data is kept
+			input_palette[i] = in_color;
+		}
+
+		perf("NonAsyncColorMatch", time_start);
 	}
 
 	public static void SetOutputImage()
@@ -702,10 +810,13 @@ public class ImageUtilities : MonoBehaviour
 
 	private static void setupFuncs()
 	{
+		PerfMon.SetupFunc("ImageUtilities", "AsyncColorMatch");
+		PerfMon.SetupFunc("ImageUtilities", "AsyncColorWorker");
 		PerfMon.SetupFunc("ImageUtilities", "CIE2000");
 		PerfMon.SetupFunc("ImageUtilities", "DefaultSettings");
 		PerfMon.SetupFunc("ImageUtilities", "FindClosest");
 		PerfMon.SetupFunc("ImageUtilities", "LoadImagePalette");
+		PerfMon.SetupFunc("ImageUtilities", "NonAsyncColorMatch");
 		PerfMon.SetupFunc("ImageUtilities", "SetOutputImage");
 		PerfMon.SetupFunc("ImageUtilities", "ShowMainButtons");
 		PerfMon.SetupFunc("ImageUtilities", "SyncPreview_Input");

@@ -6,19 +6,15 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using SFB;
 using B83.Image.BMP;
-using System.Text;
 
 [RequireComponent(typeof(Button))]
 public class LoadImage : MonoBehaviour, IPointerDownHandler
 {
-    const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, .jfi";
     const string MENU_TITLE = "Open Image To Color Swap";
-
-    private SFB.ExtensionFilter[] extensions;
 
     public RawImage input_image;
     public RawImage output_image;
@@ -26,17 +22,14 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
     public void Awake()
     {
         useGUILayout = false;
-        extensions = new[]
-        {
-            new SFB.ExtensionFilter("Image Files", "bmp", "png", "jpg", "jpeg", "jpe", "jif", "jfif", "jfi"),
-            new SFB.ExtensionFilter("All Files", "*"),
-        };
     }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     //
     // WebGL
     //
+    const string WEBGL_EXTENSIONS = ".bmp, .png, .jpg, .jpeg, .jpe, .jif, .jfif, .jfi";
+
     [DllImport("__Internal")]
     private static extern void UploadFile(string gameObjectName, string methodName, string filter, bool multiple);
 
@@ -61,6 +54,12 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
     //
     public void OnPointerDown(PointerEventData eventData) { }
 
+    private SFB.ExtensionFilter[] extensions = new[]
+    {
+        new SFB.ExtensionFilter("Image Files", "bmp", "png", "jpg", "jpeg", "jpe", "jif", "jfif", "jfi"),
+        new SFB.ExtensionFilter("All Files", "*"),
+    };
+
     void Start()
     {
         setupFuncs();
@@ -77,8 +76,7 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
         var paths = StandaloneFileBrowser.OpenFilePanel(MENU_TITLE, "", extensions, false);
 
         // check if file name selected
-        if (paths.Length < 1)
-            return;
+        if (paths.Length < 1) return;
 
         // process file
         //StartCoroutine(OutputRoutine(new System.Uri(paths[0]).AbsoluteUri));
@@ -88,11 +86,12 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
     }
 #endif
 
-    async void AsyncWait(string url)
+    private async void AsyncWait(string url)
     {
         Int64 time_start = PerfMon.Ticks();
 
-        // Working... Please Wait
+        // Working... Please wait...
+        WaitScreen.SetText();
         WaitScreen.OpenPanel();
 
         await AsyncRoutine(url);
@@ -103,7 +102,7 @@ public class LoadImage : MonoBehaviour, IPointerDownHandler
         perf("AsyncWait", time_start);
     }
 
-    async Task<string> AsyncRoutine(string url)
+    private async Task<string> AsyncRoutine(string url)
     {
         Int64 time_start = PerfMon.Ticks();
 
